@@ -23,7 +23,8 @@ services:
   frontend:
     image: 33bot/taski_fronted
     env_file: .env
-    command: cp -r /app/build/. /frontend_static/
+    restart: "no"
+    command: sh -c "cp -r /app/build/. /frontend_static/"
     volumes:
       - frontend_static:/frontend_static
 
@@ -35,7 +36,7 @@ services:
       - backend
       - frontend
     volumes:
-      - backend_static:/static
+      - backend_static:/backend_static
       - frontend_static:/frontend_static
     ports:
       - "8000:80"
