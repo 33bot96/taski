@@ -1,31 +1,43 @@
-# docker-compose.production.yml
-
 volumes:
   pg_data_production:
-  static_volume:
+  backend_static:
+  frontend_static:
 
-# Всё отличие — заменяем build на image и указываем, какой образ использовать
 services:
   db:
     image: postgres:13.10
     env_file: .env
+    restart: always
     volumes:
       - pg_data_production:/var/lib/postgresql/data
+
   backend:
-    image: 33bot/taski_backend # Качаем с Docker Hub
+    image: 33bot/taski_backend
     env_file: .env
+    restart: always
+    depends_on:
+      - db
     volumes:
-      - static_volume:/backend_static
+      - backend_static:/app/collected_static
+
   frontend:
-    image: 33bot/taski_fronted  # Качаем с Docker Hub
+    image: 33bot/taski_fronted 
     env_file: .env
-    command: cp -r /app/build/. /frontend_static/
+    restart: always
+    command: >
+      sh -c "cp -r /app/build/. /frontend_static/ && nginx -g 'daemon off;'"
     volumes:
-      - static_volume:/frontend_static
+      - frontend_static:/frontend_static
+
   gateway:
-    image: 33bot/taski_gateway  # Качаем с Docker Hub
+    image: 33bot/taski_gateway
     env_file: .env
+    restart: always
+    depends_on:
+      - backend
+      - frontend
     volumes:
-      - static_volume:/staticfiles/
+      - backend_static:/static
+      - frontend_static:/frontend_static
     ports:
-      - 8000:80
+      - "8000:80"
